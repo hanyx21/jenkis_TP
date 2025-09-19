@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-@app.get("/ping")
+@app.get("/")
 def ping():
     return jsonify(ok=True, service="jenkins-flask-starter")
 
