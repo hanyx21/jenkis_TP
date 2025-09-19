@@ -1,10 +1,6 @@
 pipeline {
-  agent { docker { image 'python:3.11-slim'; args '-u root:root' } }
-  options { timestamps(); ansiColor('xterm') }
-  environment {
-    PIP_DISABLE_PIP_VERSION_CHECK = '1'
-    PYTHONDONTWRITEBYTECODE = '1'
-  }
+  agent any
+  
   stages {
     stage('Checkout') {
       steps { checkout scm }
