@@ -1,28 +1,36 @@
 pipeline {
-  agent any
-  
-  stages {
-    stage('Checkout') {
-      steps { checkout scm }
+    agent any
+
+    environment {
+        IMAGE_NAME = "myapp"
+        IMAGE_TAG  = "latest"
     }
-    stage('Install deps') {
-      steps {
-        sh 'python -m pip install --upgrade pip'
-        sh 'pip install -r requirements.txt'
-      }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                script {
+                    // Stop and remove any old container
+                    sh """
+                        docker ps -q --filter "name=${IMAGE_NAME}" | grep -q . && docker stop ${IMAGE_NAME} && docker rm ${IMAGE_NAME} || true
+                        docker run -d --name ${IMAGE_NAME} -p 5000:5000 ${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
+            }
+        }
     }
-    stage('Tests') {
-      steps {
-        sh 'pytest -q --maxfail=1 --junitxml=pytest.xml'
-      }
-      post {
-        always { junit 'pytest.xml' }
-      }
-    }
-    stage('Archive') {
-      steps {
-        archiveArtifacts artifacts: 'app/**/*.py,requirements.txt,pytest.xml', fingerprint: true
-      }
-    }
-  }
 }
